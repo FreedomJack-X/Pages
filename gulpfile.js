@@ -23,6 +23,16 @@ gulp.task('styles', () => {
     .pipe(reload({stream: true}));
 });
 
+gulp.task('templates', () => {
+  return gulp.src('app/templates/**/*.hbs')
+    .pipe($.handlebars())
+    .pipe($.defineModule('plain'))
+    .pipe($.declare({
+      namespace: 'Handlebars.templates' // change this to whatever you want
+    }))
+    .pipe(gulp.dest('.tmp/templates'));
+});
+
 gulp.task('scripts', () => {
   return gulp.src('app/scripts/**/*.js')
     .pipe($.plumber())
@@ -57,7 +67,7 @@ gulp.task('lint:test', () => {
     .pipe(gulp.dest('test/spec/**/*.js'));
 });
 
-gulp.task('html', ['styles', 'scripts'], () => {
+gulp.task('html', ['styles', 'scripts', 'templates'], () => {
   return gulp.src('app/*.html')
     .pipe($.useref({searchPath: ['.tmp', 'app', '.']}))
     .pipe($.if('*.js', $.uglify()))
@@ -96,7 +106,7 @@ gulp.task('extras', () => {
 
 gulp.task('clean', del.bind(null, ['.tmp', 'dist']));
 
-gulp.task('serve', ['styles', 'scripts', 'fonts'], () => {
+gulp.task('serve', ['styles', 'scripts', 'fonts', 'templates'], () => {
   browserSync({
     notify: false,
     port: 9000,
@@ -111,11 +121,13 @@ gulp.task('serve', ['styles', 'scripts', 'fonts'], () => {
   gulp.watch([
     'app/*.html',
     'app/images/**/*',
-    '.tmp/fonts/**/*'
+    '.tmp/fonts/**/*',
+    '.tmp/templates/**/*.js'
   ]).on('change', reload);
 
   gulp.watch('app/styles/**/*.scss', ['styles']);
   gulp.watch('app/scripts/**/*.js', ['scripts']);
+  gulp.watch('app/templates/**/*.hbs', ['templates', reload]);
   gulp.watch('app/fonts/**/*', ['fonts']);
   gulp.watch('bower.json', ['wiredep', 'fonts']);
 });
